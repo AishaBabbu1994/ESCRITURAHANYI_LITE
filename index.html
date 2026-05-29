@@ -1,0 +1,298 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="墨香写作 - 极简便携版">
+  <title>墨香斋 · 极简版</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Estética Windows 7 / Minimalista */
+    :root {
+      --win-bg: #F0F0F0;
+      --win-panel: #FFFFFF;
+      --win-border: #A0A0A0;
+      --win-text: #000000;
+      --win-accent: #3399FF;
+      --paper-color: #FFFFFF;
+      --ink-color: #333333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, "Microsoft YaHei", sans-serif;
+      background-color: var(--win-bg);
+      color: var(--win-text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Fondo decorativo deshabilitado para rendimiento */
+    .decor-bg { display: none; }
+
+    .main-container {
+      max-width: 960px;
+      margin: 10px auto;
+      padding: 10px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Barra de herramientas estilo Aplicación de Escritorio */
+    .scroll-header {
+      background: linear-gradient(to bottom, #F2F2F2, #EBEBEB);
+      border: 1px solid var(--win-border);
+      border-radius: 3px;
+      padding: 8px 15px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chinese-stamp {
+      background: #D32F2F;
+      color: white;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 2px;
+    }
+    h1 {
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .sub { display: none; } /* Oculto en versión lite */
+
+    .tool-palette {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Botones estilo Windows Classic */
+    .tool-item, select, input {
+      background: #FFFFFF;
+      border: 1px solid #707070;
+      padding: 4px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #333;
+      border-radius: 2px;
+    }
+    .tool-item:hover {
+      background: #E5F1FB;
+      border-color: #0078D7;
+    }
+    input[type="number"] { width: 50px; }
+    input[type="color"] { width: 40px; padding: 1px; height: 25px; }
+
+    /* Área de edición simplificada */
+    .scroll-editor {
+      background: var(--win-panel);
+      border: 1px solid var(--win-border);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+    }
+
+    .scroll-rod {
+      height: 4px;
+      background: #DDD;
+      border-bottom: 1px solid #CCC;
+    }
+
+    #editor {
+      min-height: 70vh;
+      padding: 40px;
+      font-size: 20px;
+      line-height: 1.6;
+      outline: none;
+      font-family: 'Ma Shan Zheng', serif;
+      word-wrap: break-word;
+    }
+
+    #editor[placeholder]:empty:before {
+      content: attr(placeholder);
+      color: #999;
+    }
+
+    .editor-footer {
+      text-align: right;
+      padding: 5px 15px;
+      font-size: 11px;
+      color: #777;
+      background: #F9F9F9;
+      border-top: 1px solid #EEE;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* Modo Noche Minimalista */
+    body.dark {
+      --win-bg: #1A1A1A;
+      --win-panel: #252525;
+      --win-border: #444;
+      --win-text: #CCC;
+      --paper-color: #252525;
+      --ink-color: #DDD;
+    }
+    body.dark .scroll-header { background: #333; border-color: #555; }
+    body.dark .tool-item, body.dark select, body.dark input {
+      background: #444; color: #EEE; border-color: #666;
+    }
+    body.dark h1 { color: #EEE; }
+
+    @media (max-width: 600px) {
+      .scroll-header { flex-direction: column; gap: 8px; }
+      #editor { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="decor-bg"></div> <!-- Mantener estructura aunque no se use -->
+
+<div class="main-container">
+  <div class="scroll-header">
+    <div class="title-area">
+      <div class="chinese-stamp">墨</div>
+      <h1>墨香写作 · Lite</h1>
+    </div>
+    <div class="tool-palette">
+      <select id="fontSelect">
+        <option value="'Ma Shan Zheng', serif">书法体</option>
+        <option value="'Noto Serif SC', serif">宋体</option>
+        <option value="Arial, sans-serif">标准体</option>
+      </select>
+      <input type="number" id="fontSize" value="22" min="12" max="72" title="字号">
+      <input type="color" id="fontColor" value="#333333" title="文字颜色">
+      <button class="tool-item" id="darkToggleBtn">夜间模式</button>
+      <button class="tool-item" id="saveTxtBtn">保存文本</button>
+      <button class="tool-item" id="captureImgBtn">保存图片</button>
+      <label class="tool-item">导入字体
+        <input type="file" id="customFontUpload" accept=".ttf, .otf, .woff" style="display: none;">
+      </label>
+    </div>
+  </div>
+
+  <div class="scroll-editor">
+    <div class="scroll-rod"></div>
+    <div id="editor" contenteditable="true" placeholder="在此输入内容..."></div>
+    <div class="editor-footer">自动保存已开启</div>
+    <div class="scroll-rod"></div>
+  </div>
+
+  <footer>
+    <span>&copy; 墨香斋 Lite | 兼容旧版浏览器与低配电脑</span>
+  </footer>
+</div>
+
+<div id="toastMsg" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:5px 15px; border-radius:3px; font-size:12px; opacity:0; transition:0.3s; pointer-events:none;"></div>
+
+<script>
+  // Eliminamos lógica de hojas cayendo para ahorrar recursos
+
+  const editor = document.getElementById('editor');
+  const fontSelect = document.getElementById('fontSelect');
+  const fontSizeInput = document.getElementById('fontSize');
+  const fontColorInput = document.getElementById('fontColor');
+  const darkBtn = document.getElementById('darkToggleBtn');
+  const saveTxt = document.getElementById('saveTxtBtn');
+  const captureImg = document.getElementById('captureImgBtn');
+  const fontUpload = document.getElementById('customFontUpload');
+
+  function showMessage(msg) {
+    const toast = document.getElementById('toastMsg');
+    toast.innerText = msg;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+  }
+
+  // Cargar datos
+  if (localStorage.getItem('lite_content')) editor.innerHTML = localStorage.getItem('lite_content');
+  if (localStorage.getItem('lite_fontsize')) {
+    editor.style.fontSize = localStorage.getItem('lite_fontsize') + 'px';
+    fontSizeInput.value = localStorage.getItem('lite_fontsize');
+  }
+  if (localStorage.getItem('lite_darkmode') === 'true') document.body.classList.add('dark');
+
+  // Eventos
+  editor.addEventListener('input', () => localStorage.setItem('lite_content', editor.innerHTML));
+  
+  fontSelect.addEventListener('change', () => {
+    editor.style.fontFamily = fontSelect.value;
+  });
+
+  fontSizeInput.addEventListener('input', () => {
+    editor.style.fontSize = fontSizeInput.value + 'px';
+    localStorage.setItem('lite_fontsize', fontSizeInput.value);
+  });
+
+  fontColorInput.addEventListener('input', () => {
+    editor.style.color = fontColorInput.value;
+  });
+
+  darkBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('lite_darkmode', document.body.classList.contains('dark'));
+  });
+
+  fontUpload.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fontName = 'CustomFont';
+    const fontFace = new FontFace(fontName, `url(${URL.createObjectURL(file)})`);
+    try {
+      await fontFace.load();
+      document.fonts.add(fontFace);
+      editor.style.fontFamily = fontName;
+      showMessage('字体加载成功');
+    } catch (err) { showMessage('格式不支持'); }
+  });
+
+  saveTxt.addEventListener('click', () => {
+    const blob = new Blob([editor.innerText], {type: 'text/plain'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = '文稿.txt';
+    link.click();
+    showMessage('已保存文本');
+  });
+
+  captureImg.addEventListener('click', async () => {
+    showMessage('正在生成图片...');
+    try {
+      const canvas = await html2canvas(document.querySelector('.scroll-editor'), { scale: 1.5 });
+      const link = document.createElement('a');
+      link.download = '墨香斋.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch (err) { showMessage('保存失败'); }
+  });
+</script>
+</body>
+</html>
